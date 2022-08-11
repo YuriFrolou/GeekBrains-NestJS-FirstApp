@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req } from '@nestjs/common';
 import { NewsService } from './news.service';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { DeleteCommentDto } from './dto/delete-comment.dto';
+import { Roles } from '../decorators/roles.decorator';
 
 
 @Controller('news')
@@ -11,53 +11,59 @@ export class NewsController {
   constructor(private readonly newsService: NewsService) {
   }
 
+
   @Post()
-  create(@Body() createNewsDto: CreateNewsDto) {
-    return this.newsService.create(createNewsDto);
+  @Roles('admin')
+  createNews(@Body() createNewsDto: CreateNewsDto) {
+    return this.newsService.createNews(createNewsDto);
   }
 
   @Post('comment')
+  @Roles('user')
   createComment(@Body() createCommentDto: CreateCommentDto) {
     return this.newsService.createComment(createCommentDto);
   }
 
+  @Post('comment/:id')
+  @Roles('user')
+  createCommentToComment(@Param('id') id, @Body() createCommentDto: CreateCommentDto) {
+    return this.newsService.createCommentToComment(+id, createCommentDto);
+  }
+
   @Get()
-  findAll() {
-    return this.newsService.findAll();
+  @Roles('user')
+  findNewsAll() {
+    return this.newsService.findNewsAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.newsService.findOne(+id);
+  @Roles('user')
+  findNewsOne(@Param('id') id: string) {
+    return this.newsService.findNewsOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateNewsDto: UpdateNewsDto) {
-    return this.newsService.update(+id, updateNewsDto);
+  @Roles('admin')
+  updateNews(@Param('id') id: string, @Body() updateNewsDto: UpdateNewsDto) {
+    return this.newsService.updateNews(+id, updateNewsDto);
   }
 
   @Patch('comment/:id')
+  @Roles('admin')
   updateComment(@Param('id') id, @Body() createCommentDto: CreateCommentDto) {
     return this.newsService.updateComment(+id, createCommentDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.newsService.remove(+id);
+  @Roles('admin')
+  removeNews(@Param('id') id: string) {
+    return this.newsService.removeNews(+id);
   }
 
-//Этот запрос полностью рабочий
   @Delete('comment/:commentId/:newsId')
+  @Roles('admin')
   removeComment(@Param('commentId') commentId, @Param('newsId') newsId) {
     return this.newsService.removeComment(+commentId, +newsId);
   }
 
-//Всегда ответ Not Found
-  @Delete('comment')
-  deleteComment(@Body()  body: {
-    newsId: number;
-    commentId: number;
-  }) {
-    return this.newsService.deleteComment(body);
-  }
 }

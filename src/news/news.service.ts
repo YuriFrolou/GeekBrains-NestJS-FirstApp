@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { News } from './entities/news.entity';
@@ -19,7 +19,7 @@ export class NewsService {
     },
   ];
 
-  create(createNewsDto: CreateNewsDto) {
+  createNews(createNewsDto: CreateNewsDto) {
     const news: News = {
       id: this.news.length + 1,
       title: createNewsDto.title,
@@ -33,23 +33,44 @@ export class NewsService {
 
   createComment(createCommentDto: CreateCommentDto) {
     const newsId = createCommentDto.newsId;
-    const news = this.findOne(newsId);
+    const news = this.findNewsOne(newsId);
 
     const comment: Comment = {
       id: news.comments.length + 1,
       author: 'Yuriy',
       text: createCommentDto.text,
       date: new Date().toUTCString(),
+      comments: [],
     };
+
     this.news[this.news.indexOf(news)].comments.push(comment);
-    return this.findOne(newsId);
+    return this.findNewsOne(newsId);
   }
 
-  findAll() {
+  createCommentToComment(commentId: number, createCommentDto: CreateCommentDto) {
+    const newsId = createCommentDto.newsId;
+    const news = this.findNewsOne(newsId);
+    const newsComments = news.comments;
+    const searchComment = this.findCommentById(newsComments, commentId);
+
+    const comment: Comment = {
+      id: searchComment.comments.length + 1,
+      author: 'Yuriy',
+      text: createCommentDto.text,
+      date: new Date().toUTCString(),
+      comments: [],
+    };
+
+    searchComment.comments.push(comment);
+    return this.findNewsOne(newsId);
+
+  }
+
+  findNewsAll() {
     return this.news;
   }
 
-  findOne(id: number) {
+  findNewsOne(id: number) {
     const news = this.news.find((news) => news.id === id);
     if (!news) {
       throw new NotFoundException();
@@ -57,8 +78,15 @@ export class NewsService {
     return news;
   }
 
+  findCommentById(comments: Comment[], id: number) {
+    const comment = comments.find((comment) => comment.id === id);
+    if (!comment) {
+      throw new NotFoundException();
+    }
+    return comment;
+  }
 
-  update(id: number, updateNewsDto: UpdateNewsDto) {
+  updateNews(id: number, updateNewsDto: UpdateNewsDto) {
     const news = this.news.find((news) => news.id === id);
     if (!news) {
       throw new NotFoundException();
@@ -75,7 +103,7 @@ export class NewsService {
 
   updateComment(id, createCommentDto: CreateCommentDto) {
     const newsId = createCommentDto.newsId;
-    const news = this.findOne(newsId);
+    const news = this.findNewsOne(newsId);
     const comment = news.comments.find((comment) => comment.id === id);
     if (!news || !comment) {
       throw new NotFoundException();
@@ -86,13 +114,13 @@ export class NewsService {
       text: createCommentDto.text,
       date: new Date().toUTCString(),
     };
-     news.comments.splice(news.comments.indexOf(comment), 1, updatedComment);
-     this.news.splice(this.news.indexOf(news), 1, news);
-    return this.findOne(newsId);
+    news.comments.splice(news.comments.indexOf(comment), 1, updatedComment);
+    this.news.splice(this.news.indexOf(news), 1, news);
+    return this.findNewsOne(newsId);
   }
 
 
-  remove(id: number) {
+  removeNews(id: number) {
     const news = this.news.find((news) => news.id === id);
     if (!news) {
       throw new NotFoundException();
@@ -101,21 +129,8 @@ export class NewsService {
     return this.news;
   }
 
-  removeComment(commentId,newsId) {
-     const news = this.findOne(newsId);
-     const comment = news.comments.find((comment) => comment.id === commentId);
-     if (!news || !comment) {
-       throw new NotFoundException();
-     }
-     news.comments.splice(news.comments.indexOf(comment), 1);
-     this.news.splice(this.news.indexOf(news), 1, news);
-    return comment;
-  }
-
-  deleteComment(body) {
-     const newsId=Number(body.newsId);
-     const commentId=Number(body.commentId);
-    const news = this.findOne(newsId);
+  removeComment(commentId, newsId) {
+    const news = this.findNewsOne(newsId);
     const comment = news.comments.find((comment) => comment.id === commentId);
     if (!news || !comment) {
       throw new NotFoundException();
@@ -124,4 +139,5 @@ export class NewsService {
     this.news.splice(this.news.indexOf(news), 1, news);
     return comment;
   }
+
 }
