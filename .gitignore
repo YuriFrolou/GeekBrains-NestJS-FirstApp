@@ -1,7 +1,6 @@
 # compiled output
 /dist
-/public/thumbnails
-/public/attachments
+/public
 /node_modules
 
 # Logs
