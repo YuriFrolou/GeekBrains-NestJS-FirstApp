@@ -4,10 +4,11 @@ import { AppService } from './app.service';
 import { NewsModule } from './news/news.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './guards/roles/roles.guard';
+import { MailModule } from './mail/mail.module';
 
 
 @Module({
-  imports: [NewsModule],
+  imports: [NewsModule, MailModule],
   controllers: [AppController],
   providers: [AppService,
     {

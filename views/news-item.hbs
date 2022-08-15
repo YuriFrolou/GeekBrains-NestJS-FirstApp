@@ -1,0 +1,57 @@
+{{#if news}}
+    <div class='row'>
+            <div class='col-lg-6 mx-auto'>
+                <div class='card'>
+                    <img
+                            src='http://localhost:3000/{{news.thumbnail}}'
+                            class='card-img-top'
+                            alt='thumbnail'
+                    />
+                    <div class='card-body'>
+                        <h5 class='card-title mb-3'>{{news.title}}</h5>
+                        <h6 class='card-subtitle mb-3 text-muted'>
+                            Автор:
+                            {{news.author}}
+                        </h6>
+                        <h6 class='card-subtitle mb-3 text-muted'>
+                            Дата создания:
+                            {{news.date}}
+                        </h6>
+                        <p class='card-text mb-3'>{{news.text}}</p>
+                    </div>
+                    <div class="card-body">
+                    <iframe width="0" height="0" border="0" name="dummyframe" id="dummyframe"></iframe>
+                    <form class="upload-form" method="post" enctype="application/x-www-form-urlencoded" target="dummyframe"
+                          action="http://127.0.0.1:3000/news/comment">
+                    <p>Создайте комментарий</p>
+                    <input type="hidden" name="newsId" value="{{news.id}}"/>
+                    <textarea name="text" class="textarea mb-3"></textarea>
+                    <button type="submit">Создать</button>
+                    </form>
+                    </div>
+                    <div class="card-body">
+                        <h5 class='card-title mb-3'>Комментарии</h5>
+                        {{#if news.comments}}
+                            {{#each news.comments}}
+                                <div class="comment-item mb-3 ">
+                                    <h6 class='card-subtitle mb-3 text-muted'>
+                                        Автор:
+                                        {{author}}
+                                    </h6>
+                                    <h6 class="card-subtitle mb-3 text-muted"> Дата создания: {{date}}</h6>
+                                    <p class="card-text mb-3 text-muted">{{text}}</p>
+
+                                </div>
+                            {{/each}}
+                        {{else}}
+                            <p>Комментариев нет</p>
+                        {{/if}}
+                    </div>
+
+
+                </div>
+            </div>
+    </div>
+{{else}}
+    <h1>Список новостей пуст!</h1>
+{{/if}}
