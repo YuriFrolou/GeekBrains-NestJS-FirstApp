@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   UseInterceptors,
-  UploadedFile,
+  UploadedFile, Render,
 } from '@nestjs/common';
 import { NewsService } from './news.service';
 import { CreateNewsDto } from './dto/create-news.dto';
@@ -31,7 +31,7 @@ export class NewsController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/thumbnails',
+        destination: './public/thumbnails',
         filename: FileName,
       }),
       fileFilter: FileFilter,
@@ -45,7 +45,6 @@ export class NewsController {
   }
 
   @Post('comment')
-  @Roles('user')
   createComment(@Body() createCommentDto: CreateCommentDto) {
     return this.newsService.createComment(createCommentDto);
   }
@@ -57,9 +56,17 @@ export class NewsController {
   }
 
   @Get()
-  @Roles('user')
   findNewsAll() {
     return this.newsService.findNewsAll();
+  }
+
+  @Get("/render")
+  @Render('news-list')
+  findNewsAllRender() {
+    return {
+      titlePage:"Список новостей",
+      news: this.newsService.findNewsAll()
+    };
   }
 
   @Get(':id')
@@ -67,6 +74,25 @@ export class NewsController {
   findNewsOne(@Param('id') id: string) {
     return this.newsService.findNewsOne(+id);
   }
+
+  @Get('render-news/:id')
+  @Render('news-item')
+  findNewsOneRender(@Param('id') id: string) {
+    return {
+      titlePage:"Страница новости",
+      news:this.newsService.findNewsOne(+id)
+    };
+  }
+
+  @Get('render-comments/:id')
+  @Render('comments-list')
+  findCommentsByNews(@Param('id') id: string) {
+    return {
+      titlePage:"Список комментариев новости",
+      comments:this.newsService.findCommentsByNews(+id)
+    };
+  }
+
 
   @Patch(':id')
   @Roles('admin')
@@ -79,7 +105,7 @@ export class NewsController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/attachments',
+        destination: './public/attachments',
         filename: FileName,
       }),
     }),
@@ -93,7 +119,7 @@ export class NewsController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/attachments',
+        destination: './public/attachments',
         filename: FileName,
       }),
     }),
@@ -101,7 +127,7 @@ export class NewsController {
   updateComment(@UploadedFile() file: Express.Multer.File, @Param('id') id, @Body() createCommentDto: CreateCommentDto) {
     return this.newsService.updateComment(+id, {
       ...createCommentDto,
-      attachment: `attachments/${file.filename}`
+      attachment: `attachments/${file.filename}`,
     });
   }
 

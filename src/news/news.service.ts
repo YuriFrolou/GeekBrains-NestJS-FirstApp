@@ -4,22 +4,14 @@ import { UpdateNewsDto } from './dto/update-news.dto';
 import { News } from './entities/news.entity';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { MailService } from '../mail/mail.service';
 
 
 @Injectable()
 export class NewsService {
-  private news: News[] = [
-    {
-      id: 1,
-      title: 'News#1',
-      text: 'News_content#1',
-      author: 'Yuriy',
-      date: 'Sat, 06 Aug 2022 07:12:07 GMT',
-      thumbnail: '',
-      attachments: [],
-      comments: [],
-    },
-  ];
+  private news: News[] = [];
+  constructor(private readonly mailService: MailService) {
+  }
 
   createNews(createNewsDto: CreateNewsDto) {
     const news: News = {
@@ -88,12 +80,21 @@ export class NewsService {
     return this.news;
   }
 
+
   findNewsOne(id: number) {
     const news = this.news.find((news) => news.id === id);
     if (!news) {
       throw new NotFoundException();
     }
     return news;
+  }
+
+  findCommentsByNews(id: number) {
+    const news = this.news.find((news) => news.id === id);
+    if (!news) {
+      throw new NotFoundException();
+    }
+    return news.comments;
   }
 
   findCommentById(comments: Comment[], id: number) {
@@ -104,7 +105,7 @@ export class NewsService {
     return comment;
   }
 
-  updateNews(id: number, updateNewsDto: UpdateNewsDto) {
+  async updateNews(id: number, updateNewsDto: UpdateNewsDto) {
     const news = this.news.find((news) => news.id === id);
     if (!news) {
       throw new NotFoundException();
@@ -116,6 +117,7 @@ export class NewsService {
       date: new Date().toUTCString(),
     };
     this.news.splice(this.news.indexOf(news), 1, updatedNews);
+    await this.mailService.updateNewsLogMessage('yf_dev_test@mail.ru', [news,updatedNews]);
     return this.news;
   }
 
