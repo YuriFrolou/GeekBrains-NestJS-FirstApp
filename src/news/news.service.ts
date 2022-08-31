@@ -15,6 +15,8 @@ export class NewsService {
       text: 'News_content#1',
       author: 'Yuriy',
       date: 'Sat, 06 Aug 2022 07:12:07 GMT',
+      thumbnail: '',
+      attachments: [],
       comments: [],
     },
   ];
@@ -26,13 +28,15 @@ export class NewsService {
       text: createNewsDto.text,
       author: 'Yuriy',
       date: new Date().toUTCString(),
+      thumbnail: createNewsDto.thumbnail,
+      attachments: [],
       comments: [],
     };
     return this.news.push(news);
   }
 
   createComment(createCommentDto: CreateCommentDto) {
-    const newsId = createCommentDto.newsId;
+    const newsId = +createCommentDto.newsId;
     const news = this.findNewsOne(newsId);
 
     const comment: Comment = {
@@ -40,6 +44,7 @@ export class NewsService {
       author: 'Yuriy',
       text: createCommentDto.text,
       date: new Date().toUTCString(),
+      attachments: [],
       comments: [],
     };
 
@@ -48,7 +53,7 @@ export class NewsService {
   }
 
   createCommentToComment(commentId: number, createCommentDto: CreateCommentDto) {
-    const newsId = createCommentDto.newsId;
+    const newsId = +createCommentDto.newsId;
     const news = this.findNewsOne(newsId);
     const newsComments = news.comments;
     const searchComment = this.findCommentById(newsComments, commentId);
@@ -58,12 +63,25 @@ export class NewsService {
       author: 'Yuriy',
       text: createCommentDto.text,
       date: new Date().toUTCString(),
+      attachments: [],
       comments: [],
     };
 
     searchComment.comments.push(comment);
     return this.findNewsOne(newsId);
 
+  }
+
+  addAttachmentNews(attachment: string, id: number) {
+      let news: News = this.findNewsOne(id);
+      let attachments=news.attachments;
+      attachments.push(attachment);
+      news = {
+      ...news,
+      attachments: attachments
+    };
+    this.news.splice(this.news.indexOf(news), 1, news);
+    return this.news;
   }
 
   findNewsAll() {
@@ -102,17 +120,21 @@ export class NewsService {
   }
 
   updateComment(id, createCommentDto: CreateCommentDto) {
-    const newsId = createCommentDto.newsId;
+    const newsId = +createCommentDto.newsId;
     const news = this.findNewsOne(newsId);
     const comment = news.comments.find((comment) => comment.id === id);
     if (!news || !comment) {
       throw new NotFoundException();
+    }
+    if(createCommentDto.attachment){
+      comment.attachments.push(createCommentDto.attachment);
     }
 
     const updatedComment: Comment = {
       ...comment,
       text: createCommentDto.text,
       date: new Date().toUTCString(),
+      attachments: comment.attachments
     };
     news.comments.splice(news.comments.indexOf(comment), 1, updatedComment);
     this.news.splice(this.news.indexOf(news), 1, news);

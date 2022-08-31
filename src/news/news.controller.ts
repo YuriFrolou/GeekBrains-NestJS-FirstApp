@@ -1,9 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { NewsService } from './news.service';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Roles } from '../decorators/roles.decorator';
+import { Express } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { FileFilter, FileName } from '../utils/multer.config';
 
 
 @Controller('news')
@@ -14,8 +28,20 @@ export class NewsController {
 
   @Post()
   @Roles('admin')
-  createNews(@Body() createNewsDto: CreateNewsDto) {
-    return this.newsService.createNews(createNewsDto);
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/thumbnails',
+        filename: FileName,
+      }),
+      fileFilter: FileFilter,
+    }),
+  )
+  createNews(@UploadedFile() file: Express.Multer.File, @Body() createNewsDto: CreateNewsDto) {
+    return this.newsService.createNews({
+      ...createNewsDto,
+      thumbnail: `thumbnails/${file.filename}`,
+    });
   }
 
   @Post('comment')
@@ -48,10 +74,35 @@ export class NewsController {
     return this.newsService.updateNews(+id, updateNewsDto);
   }
 
+  @Post('add-file/:id')
+  @Roles('admin')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/attachments',
+        filename: FileName,
+      }),
+    }),
+  )
+  addAttachmentNews(@UploadedFile() file: Express.Multer.File, @Param('id') id: string) {
+    return this.newsService.addAttachmentNews(`attachments/${file.filename}`, +id);
+  }
+
   @Patch('comment/:id')
   @Roles('admin')
-  updateComment(@Param('id') id, @Body() createCommentDto: CreateCommentDto) {
-    return this.newsService.updateComment(+id, createCommentDto);
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/attachments',
+        filename: FileName,
+      }),
+    }),
+  )
+  updateComment(@UploadedFile() file: Express.Multer.File, @Param('id') id, @Body() createCommentDto: CreateCommentDto) {
+    return this.newsService.updateComment(+id, {
+      ...createCommentDto,
+      attachment: `attachments/${file.filename}`
+    });
   }
 
   @Delete(':id')
